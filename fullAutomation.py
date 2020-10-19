@@ -14,8 +14,17 @@ def matchBrainTags():
             if(filename[:len(filename)-4] in brain):
                 matchedBrainTags[filename[:len(filename)-4]] = brain
 
-    transform = vtk.vtkTransform()
+    # transform = vtk.vtkTransformPolyDataFilter()    # vtkTransformPolyDataFilter takes vtkAbstractTransform as a parameter
     polyData = loadSTL(testFile)
+    trans = vtk.vtkTransform()
+    trans.Translate(1, 1, 1)
+
+    rotate = vtk.vtkTransformPolyDataFilter()
+    rotate.SetTransform(trans)
+    # Getting ERROR here 'Segmentation fault (core dumped)'
+    rotate.SetInputConnection(polyData)
+
+    translated = rotate.Update()
     return False
 
 
@@ -28,7 +37,8 @@ def loadSTL(name):
     reader = vtk.vtkSTLReader()
     reader.SetFileName(name)
     reader.Update()
-    polydata = reader.GetOutput()
+    polydata = reader.GetOutputPort()
+
     return polydata
 
 
