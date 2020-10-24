@@ -1,8 +1,7 @@
 import os
 import vtk
 
-
-def matchBrainTags():
+def main():
     brainDir = "./Priority2SaveDir"
     keyChainDir = "./Priority2NameTags"
     matchedBrainTags = {}
@@ -14,30 +13,71 @@ def matchBrainTags():
                 matchedBrainTags[filename[:len(filename)-4]] = brain
 
     # transform = vtk.vtkTransformPolyDataFilter()    # vtkTransformPolyDataFilter takes vtkAbstractTransform as a parameter
+    input = ['./Priority2SaveDir/stx_neo-0078-1-6year_mid_keyChain.stl',
+    './Priority2SaveDir/stx_neo-0100-1-6year_mid_keyChain.stl',
+    './Priority2SaveDir/stx_neo-0123-1-6year_mid_keyChain.stl',
+    './Priority2SaveDir/stx_neo-0125-1-6year_mid_keyChain.stl',
+    './Priority2SaveDir/stx_neo-0217-1-6year_mid_keyChain.stl',
+    './Priority2SaveDir/stx_neo-0343-1-1-6year_mid_keyChain.stl']
+
+    inputTags = ['0078-1.stl',
+    '0100-1.stl',
+    '0123-1.stl',
+    '0125-1.stl',
+    '0217-1.stl',
+    '0343-1-1.stl']
+
+    switcher = {1: [-50,50,0],
+    2: [0,50,0],
+    3: [50,50,0],
+    4: [-50,0,0],
+    5: [0,0,0],
+    6: [50,0,0]}
+    count = 1
+
     reader = vtk.vtkSTLReader()
-    reader.SetFileName('./Priority2SaveDir/stx_neo-0078-1-6year_mid_keyChain.stl')
+    appendFilter = vtk.vtkAppendPolyData()
 
-    trans = vtk.vtkTransform()
-    trans.Translate(1, 1, 1)
+    for i in input:
+        reader.SetFileName(i)
+        trans = vtk.vtkTransform()
+        coordinates = switcher[count]
+        trans.Translate(coordinates[0], coordinates[1], coordinates[2])
 
-    process = vtk.vtkTransformPolyDataFilter()
-    process.SetTransform(trans)
-    process.SetInputConnection(reader.GetOutputPort())
-    process.Update()
+        process = vtk.vtkTransformPolyDataFilter()
+        process.SetTransform(trans)
+        process.SetInputConnection(reader.GetOutputPort())
+        process.Update()
 
-    process.GetOutputPort()
-    # VTK append polydata
-    # Need a writer to save images after translate
-    return False
+        appendFilter.AddInputConnection(process.GetOutputPort())
 
 
-def createScene():
-    return False
+        count += 1
 
-def main():
-    # Match brain images with their respective name tags
-    matchedBrainTags = matchBrainTags()
-    return False
+    appendFilter.Update()
 
+    mapper = vtk.vtkPolyDataMapper()
+    mapper.SetInputConnection(appendFilter.GetOutputPort())
+
+    actor = vtk.vtkActor()
+    actor.SetMapper(mapper)
+
+    renderer = vtk.vtkRenderer()
+    renderWindow = vtk.vtkRenderWindow()
+    renderWindow.AddRenderer(renderer)
+    renderWindowInteractor = vtk.vtkRenderWindowInteractor()
+    renderWindowInteractor.SetRenderWindow(renderWindow)
+
+    renderer.AddActor(actor)
+    renderer.SetBackground(.3, .2, .1)
+
+    renderWindow.Render()
+    renderWindowInteractor.Start()
+
+    #writer = vtk.vtkPolyDataWriter()
+    #writer.SetFileName('./Priority2SaveDir/stx_neo-0078-1-6year_mid_keyChain(2).stl')
+    #writer.SetInputConnection(appendFilter.GetOutputPort())
+    #writer.Write()
+    return True
 
 main()
