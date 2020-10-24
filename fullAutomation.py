@@ -1,5 +1,6 @@
 import os
 import vtk
+import itertools
 
 def main():
     brainDir = "./Priority2SaveDir"
@@ -20,28 +21,35 @@ def main():
     './Priority2SaveDir/stx_neo-0217-1-6year_mid_keyChain.stl',
     './Priority2SaveDir/stx_neo-0343-1-1-6year_mid_keyChain.stl']
 
-    inputTags = ['0078-1.stl',
-    '0100-1.stl',
-    '0123-1.stl',
-    '0125-1.stl',
-    '0217-1.stl',
-    '0343-1-1.stl']
+    inputTags = ['./Priority2NameTags/0078-1.stl',
+    './Priority2NameTags/0100-1.stl',
+    './Priority2NameTags/0123-1.stl',
+    './Priority2NameTags/0125-1.stl',
+    './Priority2NameTags/0217-1.stl',
+    './Priority2NameTags/0343-1-1.stl']
 
-    switcher = {1: [-50,50,0],
-    2: [0,50,0],
-    3: [50,50,0],
+    switcherBrain = {1: [-50,60,0],
+    2: [0,60,0],
+    3: [50,60,0],
     4: [-50,0,0],
     5: [0,0,0],
     6: [50,0,0]}
+    switcherNameTag = {1: [-90,60,10],
+    2: [-40,60,10],
+    3: [10,60,10],
+    4: [-90,0,10],
+    5: [-40,0,10],
+    6: [10,0,10]}
     count = 1
 
-    reader = vtk.vtkSTLReader()
     appendFilter = vtk.vtkAppendPolyData()
 
-    for i in input:
+    for (i, iT) in zip(input, inputTags):
+        # Append key chain
+        reader = vtk.vtkSTLReader()
         reader.SetFileName(i)
         trans = vtk.vtkTransform()
-        coordinates = switcher[count]
+        coordinates = switcherBrain[count]
         trans.Translate(coordinates[0], coordinates[1], coordinates[2])
 
         process = vtk.vtkTransformPolyDataFilter()
@@ -50,11 +58,25 @@ def main():
         process.Update()
 
         appendFilter.AddInputConnection(process.GetOutputPort())
+        appendFilter.Update()
 
+        # Append nane tag
+        reader = vtk.vtkSTLReader()
+        reader.SetFileName(iT)
+        trans = vtk.vtkTransform()
+        coordinates = switcherNameTag[count]
+        trans.Translate(coordinates[0], coordinates[1], coordinates[2])
 
+        process = vtk.vtkTransformPolyDataFilter()
+        process.SetTransform(trans)
+        process.SetInputConnection(reader.GetOutputPort())
+        process.Update()
+
+        appendFilter.AddInputConnection(process.GetOutputPort())
+        appendFilter.Update()
         count += 1
 
-    appendFilter.Update()
+    #appendFilter.Update()
 
     mapper = vtk.vtkPolyDataMapper()
     mapper.SetInputConnection(appendFilter.GetOutputPort())
