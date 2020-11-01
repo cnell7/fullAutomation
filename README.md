@@ -1,1 +1,2 @@
-This python script uses VTK and OS libraries to create a brain keychain scene with matching name tags. Currently working on getting 6 brain scans per scene.
+## About
+This python script uses VTK to create a brain keychain scene with matching name tags. Supports up to 6 matching keychains and nametags per scene.
